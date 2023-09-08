@@ -55,7 +55,7 @@ public class AwsChromium
 		{
 			decompressFile(Path.of("/opt/chromedriver.br"), driverFile);
 			if (!driverFile.setExecutable(true))
-				throw new IllegalStateException("Unable to mark Chromium binaries as executable");
+				throw new IllegalStateException("Unable to mark `chromedriver` as executable");
 		}
 
 		var options = new ChromeOptions()
