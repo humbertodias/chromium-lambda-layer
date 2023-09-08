@@ -4,7 +4,7 @@
 
 1. Grab the latest `*-layer.zip` release from [@Sparticuz/chromium](https://github.com/Sparticuz/chromium). Unpack it, then find the compressed binaries at `nodejs/node_modules/@sparticuz/chromium/bin/`.
 
-2. Copy `chromium.br` to the layer's root folder. Decompress `aws.tar.br` and `swiftshader.tar.br` using [Brotli](https://github.com/google/brotli) and move the library files and `vk_swiftshader_icd` to the layer's `lib/` folder.
+2. Copy `chromium.br` to the layer's root folder. Decompress `aws.tar.br` and `swiftshader.tar.br` using [Brotli](https://github.com/google/brotli) and move the library files and `vk_swiftshader_icd` to the layer's `lib/` folder. _(I'm not shipping the compressed libraries because I couldn't figure out how to get Lambda to pick up `/tmp/lib` as a library search path; setting `LD_LIBRARY_PATH` in the Lambda environment didn't work for me. If you can figure out a way all of the binaries could be compressed to reduce the layer size quite a lot.)_
 
 3. Deploy a Linux64 [AWS Lambda container image](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html) to a Docker container. Copy out these files from `/usr/lib64` and place them in the layer's `lib/` folder: `libglib-2.0.so.0`, `libXau.so.6`, `libxcb.so.1`
 
