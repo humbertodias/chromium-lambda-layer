@@ -1,0 +1,40 @@
+FROM public.ecr.aws/lambda/java:21 AS build
+
+RUN dnf -y update && \
+    dnf install -y unzip tar gzip binutils patchelf && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf /var/tmp/* /tmp/*
+
+ARG GECKO_VERSION=0.35.0
+ARG FIREFOX_VERSION=132.0.2
+
+RUN dnf update -y && \
+    dnf install -y tar bzip2 gzip && \
+    cd /tmp && \
+    curl -sSL "https://github.com/mozilla/geckodriver/releases/download/v${GECKO_VERSION}/geckodriver-v${GECKO_VERSION}-linux64.tar.gz" -o geckodriver-linux64.tar.gz && \
+    tar -xzf geckodriver-linux64.tar.gz && \
+    curl -sSL "https://download.mozilla.org/?product=firefox-${FIREFOX_VERSION}&os=linux64&lang=en-US" -o firefox-linux64.tar.bz2 && \
+    tar -xjf firefox-linux64.tar.bz2 && \
+    rm *.tar.gz *.tar.bz2
+
+
+RUN dnf install -y gtk3 libX11-xcb alsa-lib && dnf clean all
+
+ENV GECKO_DRIVER_PATH="/tmp/geckodriver"
+ENV FIREFOX_HEADLESS_PATH="/tmp/firefox/firefox"
+RUN chmod +x ${GECKO_DRIVER_PATH} ${FIREFOX_HEADLESS_PATH}
+
+COPY copy-deps.sh /tmp/firefox
+RUN cd /tmp/firefox && \
+    chmod +x copy-deps.sh && bash copy-deps.sh firefox
+
+RUN cd /tmp && \
+    tar cvfz java21-firefox-layer.tar.gz firefox/ geckodriver
+
+CMD [ "com.example.App::handleRequest" ]
+
+# docker build . -f Dockerfile-firefox --platform linux/amd64 -t lambda-firefox-layer
+# docker run -d --rm --name lambda-firefox-layer --platform linux/amd64 lambda-firefox-layer
+# docker cp lambda-firefox-layer:/tmp/java21-firefox-layer.tar.gz .
+# docker rm lambda-firefox-layer -f
+# LD_DEBUG=libs ./firefox

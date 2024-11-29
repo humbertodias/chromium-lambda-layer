@@ -8,9 +8,10 @@ repositories {
 
 dependencies {
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
-    implementation 'org.seleniumhq.selenium:selenium-java:4.11.0'
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.779'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.26.0'
     implementation 'org.brotli:dec:0.1.2'
-    implementation  'org.apache.commons:commons-compress:1.23.0'
+    implementation 'org.apache.commons:commons-compress:1.26.0'
 }
 
 java {
@@ -28,7 +29,7 @@ jar {
         attributes('Main-Class': 'com.example.App')
     }
 
-    // Dump all dependencies into `App.jar` so it can be uplaoded and hosted on Lambda
+    // Dump all dependencies into `App.jar` so it can be uploaded and hosted on Lambda
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         configurations.runtimeClasspath.collect {

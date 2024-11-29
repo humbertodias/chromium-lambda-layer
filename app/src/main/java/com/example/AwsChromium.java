@@ -1,14 +1,11 @@
 package com.example;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Path;
 
-import org.apache.commons.compress.compressors.brotli.BrotliCompressorInputStream;
+
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 public class AwsChromium
@@ -16,51 +13,29 @@ public class AwsChromium
 	private AwsChromium()
 	{}
 
+	public static ChromeDriver launch() throws IOException {
 
-	/**
-	 * Decompress a Brotli archive containing a single file.
-	 * @param archive The location of the archive.
-	 * @param destination Where to place the decompressed file.
-	 */
-	private static void decompressFile(Path archive, File destination)
-	{
-		try (var inputStream = new BrotliCompressorInputStream(
-			new BufferedInputStream(
-				Files.newInputStream(archive))))
-		{
-			try (var outputStream = new FileOutputStream(destination))
-			{
-				inputStream.transferTo(outputStream);
-			}
+		// LD_LIBRARY_PATH
+		LibraryPath.updateLdLibraryPath("/tmp", "/tmp/lib64");
+		LibraryPath.listFiles("/usr/lib64");
+		// LD_LIBRARY_PATH
+
+		var tarGzFilePath = "/tmp/java11-chrome-layer.tar.gz";
+		if(!new File("/tmp/lib64").exists()){
+			TarGzipHelper.extractTarGz(tarGzFilePath, "/");
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
 
-
-	public static ChromeDriver launch()
-	{
 		var chromiumFile = Path.of("/tmp/chromium").toFile();
-		if (!chromiumFile.exists())
-		{
-			decompressFile(Path.of("/opt/chromium.br"), chromiumFile);
-			if (!chromiumFile.setExecutable(true))
-				throw new IllegalStateException("Unable to mark `chromium` as executable");
-		}
+		if (!chromiumFile.setExecutable(true))
+			throw new IllegalStateException("Unable to mark `chromium` as executable");
 
 		var driverFile = Path.of("/tmp/chromedriver").toFile();
-		if (!driverFile.exists())
-		{
-			decompressFile(Path.of("/opt/chromedriver.br"), driverFile);
-			if (!driverFile.setExecutable(true))
-				throw new IllegalStateException("Unable to mark `chromedriver` as executable");
-		}
+		if (!driverFile.setExecutable(true))
+			throw new IllegalStateException("Unable to mark `chromedriver` as executable");
 
 		var options = new ChromeOptions()
 			.setBinary(chromiumFile)
-			.addArguments("--headless=new")
+			.addArguments("--headless")
 			.addArguments("--no-sandbox")
 			.addArguments("--disable-dev-shm-usage")
 			.addArguments("--disable-gpu")
@@ -72,6 +47,16 @@ public class AwsChromium
 
 		System.setProperty("webdriver.chrome.driver", driverFile.toString());
 
-		return new ChromeDriver(options);
+		ChromeDriverService service = new ChromeDriverService.Builder()
+				.withLogOutput(System.out)
+				.withVerbose(true)
+				.usingAnyFreePort()
+				.usingDriverExecutable(driverFile)
+				.build();
+
+		return new ChromeDriver(service, options);
 	}
+
+
+
 }

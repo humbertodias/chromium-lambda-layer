@@ -2,6 +2,9 @@ package com.example;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+import java.io.IOException;
 
 public class App implements RequestHandler<Object, String>
 {
@@ -11,11 +14,16 @@ public class App implements RequestHandler<Object, String>
 	 */
 	public String handleRequest(Object message, Context context)
 	{
-		var driver = AwsChromium.launch();
-		driver.get("https://aws.amazon.com");
-		var title = driver.getTitle();
-		driver.quit();
-		return title;
+        ChromeDriver driver = null;
+        try {
+            driver = AwsChromium.launch();
+			driver.get("https://www.selenium.dev");
+			var title = driver.getTitle();
+			driver.quit();
+			return title;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 	}
 
 
@@ -23,8 +31,7 @@ public class App implements RequestHandler<Object, String>
 	 * Command line entry point, for manually launching within a local Docker container.
 	 */
 	@SuppressWarnings("java:S106") /* console output */
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		var app = new App();
 		var pageTitle = app.handleRequest(null, null);
 		System.out.println("Requested page title is " + pageTitle);

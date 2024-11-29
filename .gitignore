@@ -4,3 +4,5 @@ bin/
 build/
 
 *.jar filter=lfs diff=lfs merge=lfs -text
+*.tar.gz
+.idea
